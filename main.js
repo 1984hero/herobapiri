@@ -1,105 +1,63 @@
-var c = document.getElementById('canv');
-var $ = c.getContext('2d'); 
-var ang = 0;
-var secondsColor = 'hsla(180, 85%, 5%, .7)';
-var minutesColor = 'hsla(180, 95%, 15%, 1)';
-var hoursColor = 'hsla(180, 75%, 25%, 1)';
-var currentHr;
-var currentMin;
-var currentSec;
-var currentMillisec; 
-var t = setInterval( 'updateTime()', 50 );
-
-function updateTime(){
-	var currentDate = new Date();
-	var g = $.createRadialGradient(250,250,.5,250,250,250);  
-  g.addColorStop(0, 'hsla(180, 55%, 8%, 1)');  
-  g.addColorStop(1, 'hsla(180, 95%, 15%, 1)');  
-	$.fillStyle = g;
-	$.fillRect( 0, 0, c.width, c.height );
-	currentSec = currentDate.getSeconds();
-	currentMillisec = currentDate.getMilliseconds();
-	currentMin = currentDate.getMinutes();
-	currentHr = currentDate.getHours();
-	if(currentHr == 00){ 
-    currentHr=12;
+var hoursContainer = document.querySelector('.hours')
+var minutesContainer = document.querySelector('.minutes')
+var secondsContainer = document.querySelector('.seconds')
+var tickElements = Array.from(document.querySelectorAll('.tick'))
+var last = new Date(0)
+last.setUTCHours(-1)
+var tickState = true
+function updateTime () {
+  var now = new Date
+    var lastHours = last.getHours().toString()
+  var nowHours = now.getHours().toString()
+  if (lastHours !== nowHours) {
+    updateContainer(hoursContainer, nowHours)
   }
-  else if (currentHr >= 13 ){  
-    currentHr -=12;
+    var lastMinutes = last.getMinutes().toString()
+  var nowMinutes = now.getMinutes().toString()
+  if (lastMinutes !== nowMinutes) {
+    updateContainer(minutesContainer, nowMinutes)
   }
-	drawSeconds();
-	drawMinutes();
-	drawHours();
-	var realTime = currentHr + ':' + numPad0( currentMin ) + ':' + numPad0( currentSec );
-	var textPosX = 250 - ( $.measureText(realTime).width / 2 );
-  $.shadowColor = 'hsla(180, 100%, 5%, 1)';
-  $.shadowBlur = 100;
-  $.shadowOffsetX = 12;
-  $.shadowOffsetY = 0;
-	$.fillStyle =  'hsla(255,255%,255%,.7)';
-	$.font = "bold 1.6em 'Noto Serif', serif";
-	$.fillText( realTime, textPosX, c.height/2+50);
+    var lastSeconds = last.getSeconds().toString()
+  var nowSeconds = now.getSeconds().toString()
+  if (lastSeconds !== nowSeconds) {
+    //tick()
+    updateContainer(secondsContainer, nowSeconds)
+  }
+  
+  last = now
+}
+function tick () {
+  tickElements.forEach(t => t.classList.toggle('tick-hidden'))
+}
+function updateContainer (container, newTime) {
+  var time = newTime.split('')
+  
+  if (time.length === 1) {
+    time.unshift('0')
+  }
+    var first = container.firstElementChild
+  if (first.lastElementChild.textContent !== time[0]) {
+    updateNumber(first, time[0])
+  }
+   var last = container.lastElementChild
+  if (last.lastElementChild.textContent !== time[1]) {
+    updateNumber(last, time[1])
+  }
 }
 
-function drawSeconds(){  
-	ang = 0.006 * ( ( currentSec * 1000 ) + currentMillisec );
-	$.fillStyle = secondsColor;
-	$.beginPath();
-	$.moveTo( 250, 250 ); 
-	$.lineTo( 250, 50 );
-	$.arc( 250, 250, 200, calcDeg( 0 ), calcDeg( ang ), false );
-	$.lineTo( 250, 250 );
-  $.shadowColor = 'hsla(180, 45%, 5%, .4)';
-  $.shadowBlur =15;
-  $.shadowOffsetX = 15;
-  $.shadowOffsetY = 15;
-	$.fill();
-} 
-function drawMinutes(){  
-	ang = 0.0001 * ( ( currentMin * 60 * 1000 ) + ( currentSec * 1000 ) + currentMillisec );
-	$.fillStyle = minutesColor;
-	$.beginPath();
-	$.moveTo( 250, 250 ); 
-	$.lineTo( 250, 100 );
-	$.arc( 250, 250, 150, calcDeg( 0 ), calcDeg( ang ), false );
-	$.lineTo( 250, 250 );
-  $.shadowColor = 'hsla(180, 25%, 5%, .4)';
-  $.shadowBlur =15;
-  $.shadowOffsetX = 15;
-  $.shadowOffsetY = 15;
-	$.fill();
-}  
+function updateNumber (element, number) {
+  var second = element.lastElementChild.cloneNode(true)
+  second.textContent = number
+  
+  element.appendChild(second)
+  element.classList.add('move')
 
-function drawHours(){  
-	ang = 0.000008333 * ( ( currentHr * 60 * 60 * 1000 ) + ( currentMin * 60 * 1000 ) 
-	+ ( currentSec * 1000 ) + currentMillisec );
-	if( ang > 360 ){
-		ang -= 360;
-	}
-	$.fillStyle = hoursColor;
-	$.beginPath();
-	$.moveTo( 250, 250 ); 
-	$.lineTo( 250, 150 );
-	$.arc( 250, 250, 100, calcDeg( 0 ), calcDeg( ang ), false );
-	$.lineTo( 250, 250 );
-  $.shadowColor = 'hsla(180, 45%, 5%, .4)';
-  $.shadowBlur =15;
-  $.shadowOffsetX = 15;
-  $.shadowOffsetY = 15;
-	$.fill();
-}  
-function calcDeg( deg ){
-	return (Math.PI/180) * (deg - 90);
+  setTimeout(function () {
+    element.classList.remove('move')
+  }, 990)
+  setTimeout(function () {
+    element.removeChild(element.firstElementChild)
+  }, 990)
 }
-function numPad0( str ){
-	var cStr = str.toString();
-	if( cStr.length < 2 ){
-		 str = 0 + cStr;
-	}
-	return str;
-}
-window.addEventListener('resize', function(){
-  c.width = 500;
-  c.height = 500;
-});
 
+setInterval(updateTime, 100)
